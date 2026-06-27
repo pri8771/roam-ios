@@ -47,7 +47,7 @@ enum ZCTAOverlayRenderer {
 
     static func makeRenderer(for polygon: MKPolygon, style: ZCTAOverlayStyle) -> MKPolygonRenderer {
         let renderer = MKPolygonRenderer(polygon: polygon)
-        let s = style(for: style)
+        let s = Self.style(for: style)
         renderer.fillColor = s.fillColor
         renderer.strokeColor = s.strokeColor
         renderer.lineWidth = s.lineWidth

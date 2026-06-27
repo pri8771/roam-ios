@@ -33,6 +33,11 @@
     <string>ZIP Tracker uses your location while the app is open to show your current ZIP Code Area and start private tracking.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>ZIP Tracker uses background location to privately record ZIP Code Areas you enter, even when the app is not open. Your history stays on this device.</string>
+    <key>NSLocationTemporaryUsageDescriptionDictionary</key>
+    <dict>
+        <key>ZIPDetection</key>
+        <string>ZIP Tracker briefly uses precise location to accurately identify which ZIP Code Area you are in.</string>
+    </dict>
 
     <!-- Background execution: location only -->
     <key>UIBackgroundModes</key>
