@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Xcode user state & build artifacts
+xcuserdata/
+*.xcuserstate
+build/
+DerivedData/
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Generated / local ZCTA production bundle (build it yourself; see Scripts/)
+ZIPTracker/Resources/ZCTA/zcta_bundle.sqlite
+
+# Python
+__pycache__/
+*.pyc
