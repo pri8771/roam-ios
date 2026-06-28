@@ -25,16 +25,16 @@ final class DependencyContainer: ObservableObject {
     var mainContext: ModelContext { modelContainer.mainContext }
 
     init(inMemory: Bool = false) {
-        // 1. SwiftData container.
-        let schema = Schema([
-            TrackedZCTA.self,
-            ZCTAVisit.self,
-            TrackingEventLog.self,
-            AppSettings.self
-        ])
+        // 1. SwiftData container, built from the versioned schema + migration
+        //    plan so future model changes can migrate instead of breaking stores.
+        let schema = ZIPTrackerSchema.current
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
         do {
-            modelContainer = try ModelContainer(for: schema, configurations: [config])
+            modelContainer = try ModelContainer(
+                for: schema,
+                migrationPlan: ZIPTrackerSchema.migrationPlan,
+                configurations: [config]
+            )
         } catch {
             fatalError("Failed to create SwiftData ModelContainer: \(error)")
         }
