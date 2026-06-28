@@ -78,6 +78,11 @@ final class BackgroundLocationService: NSObject, CLLocationManagerDelegate {
         manager.startMonitoringSignificantLocationChanges()
         manager.startMonitoringVisits()
         isTracking = true
+
+        // If the user granted only reduced (coarse) accuracy, a coordinate may
+        // not resolve to a ZCTA polygon. Ask for a one-time precise fix so
+        // detection can work; iOS shows this at most once per purpose key.
+        requestTemporaryFullAccuracyIfNeeded()
     }
 
     func stopTracking() {
@@ -120,7 +125,10 @@ final class BackgroundLocationService: NSObject, CLLocationManagerDelegate {
         case .whenInUse, .whenInUseReducedAccuracy:
             onWhenInUseGranted?()
             // Cannot run background tracking yet; keep foreground updates if intended.
-            if trackingEnabledIntent { manager.startUpdatingLocation() }
+            if trackingEnabledIntent {
+                manager.startUpdatingLocation()
+                if state == .whenInUseReducedAccuracy { requestTemporaryFullAccuracyIfNeeded() }
+            }
         case .always, .alwaysReducedAccuracy:
             if trackingEnabledIntent { startTracking(mode: currentMode) }
         case .denied, .restricted, .notDetermined:
