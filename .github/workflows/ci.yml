@@ -55,16 +55,51 @@ jobs:
           echo "Using simulator: $NAME"
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Build & test
+      - name: Build for testing
         run: |
           set -o pipefail
-          xcodebuild \
+          xcodebuild build-for-testing \
             -project ZIPTracker.xcodeproj \
             -scheme ZIPTracker \
             -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }},OS=latest" \
-            -resultBundlePath TestResults.xcresult \
-            CODE_SIGNING_ALLOWED=NO \
-            clean build test
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Boot simulator
+        run: |
+          xcrun simctl boot "${{ steps.sim.outputs.name }}" || true
+          xcrun simctl bootstatus "${{ steps.sim.outputs.name }}" || true
+
+      - name: Test (retry simulator install flakiness)
+        run: |
+          set -o pipefail
+          # GitHub's CoreSimulator intermittently fails app install with
+          # "Unable to Install ... Please try again later." Retry a few times,
+          # resetting simulator state between attempts.
+          attempt=1
+          max=3
+          while [ "$attempt" -le "$max" ]; do
+            echo "::group::Test attempt $attempt/$max"
+            rm -rf TestResults.xcresult
+            if xcodebuild test-without-building \
+                -project ZIPTracker.xcodeproj \
+                -scheme ZIPTracker \
+                -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }},OS=latest" \
+                -resultBundlePath TestResults.xcresult \
+                CODE_SIGNING_ALLOWED=NO; then
+              echo "::endgroup::"
+              echo "Tests passed on attempt $attempt"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Attempt $attempt failed; resetting simulator and retrying"
+            xcrun simctl shutdown all || true
+            sleep 10
+            xcrun simctl boot "${{ steps.sim.outputs.name }}" || true
+            xcrun simctl bootstatus "${{ steps.sim.outputs.name }}" || true
+            attempt=$((attempt + 1))
+          done
+          echo "All $max test attempts failed"
+          exit 1
 
       - name: Upload test results
         if: always()
