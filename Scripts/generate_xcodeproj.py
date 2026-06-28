@@ -199,9 +199,26 @@ main_group = group(None, [
 ])
 
 # --- build configurations ---
+import re as _re
+
+def _quote_setting(value):
+    """Quote a build-setting value for OpenStep plist when needed.
+
+    In pbxproj, unquoted values may only contain a safe character set; anything
+    with spaces or special chars like '(' (which starts an array) MUST be quoted.
+    Values already wrapped in quotes are passed through unchanged.
+    """
+    s = str(value)
+    if len(s) >= 2 and s.startswith('"') and s.endswith('"'):
+        return s
+    if _re.fullmatch(r"[A-Za-z0-9_.$/]+", s):
+        return s
+    return '"' + s.replace('"', '\\"') + '"'
+
+
 def build_config(name, settings):
     cid = oid()
-    lines = "\n".join(f'\t\t\t\t{k} = {v};' for k, v in settings.items())
+    lines = "\n".join(f'\t\t\t\t{k} = {_quote_setting(v)};' for k, v in settings.items())
     sections["XCBuildConfiguration"].append(
         f"\t\t{cid} /* {name} */ = {{\n"
         f"\t\t\tisa = XCBuildConfiguration;\n"
@@ -276,7 +293,8 @@ test_common = {
     "GENERATE_INFOPLIST_FILE": "YES",
     "TARGETED_DEVICE_FAMILY": '"1"',
     "TEST_HOST": f'"$(BUILT_PRODUCTS_DIR)/{PROJECT_NAME}.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/{PROJECT_NAME}"',
-    "BUNDLE_LOADER": "$(TEST_HOST)",
+    # Must be quoted: pbxproj is OpenStep plist, where unquoted "(" starts an array.
+    "BUNDLE_LOADER": '"$(TEST_HOST)"',
     "CODE_SIGN_STYLE": "Automatic",
     "CODE_SIGNING_ALLOWED": "NO",
 }
