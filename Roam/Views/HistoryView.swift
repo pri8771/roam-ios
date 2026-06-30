@@ -112,10 +112,15 @@ struct HistoryView: View {
 private struct TrackedZCTARow: View {
     let tracked: TrackedZCTA
 
+    private var stateLabel: String {
+        guard let state = USStateResolver.state(forZIP: tracked.zctaCode) else { return "" }
+        return "\(state.code) · "
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: tracked.isFavorite ? "star.fill" : "mappin.circle")
-                .foregroundStyle(tracked.isFavorite ? .yellow : Color.accentColor)
+                .foregroundStyle(tracked.isFavorite ? Color.roamAmber : Color.roamIndigo)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
@@ -128,7 +133,7 @@ private struct TrackedZCTARow: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text("\(tracked.visitCount) visit\(tracked.visitCount == 1 ? "" : "s") · \(formattedDuration(tracked.totalDurationSeconds))")
+                Text("\(stateLabel)\(tracked.visitCount) visit\(tracked.visitCount == 1 ? "" : "s") · \(formattedDuration(tracked.totalDurationSeconds))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

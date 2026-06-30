@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import Combine
+import SwiftUI
 
 /// Composition root. Owns the long-lived services and the SwiftData container,
 /// and wires the location pipeline together. Created once at app launch and held
@@ -91,8 +92,27 @@ final class DependencyContainer: ObservableObject {
             try? mainContext.save()
             SampleDataService(context: mainContext).generateShowcaseVisits()
         }
+        if ProcessInfo.processInfo.arguments.contains("-UIPREVIEW_SHARECARD") {
+            renderShareCardForPreview()
+        }
         #endif
     }
+
+    #if DEBUG
+    /// Renders the share card to Documents so screenshots can verify the
+    /// launch-blocking growth feature off-device.
+    private func renderShareCardForPreview() {
+        let tracked = (try? mainContext.fetch(FetchDescriptor<TrackedZCTA>())) ?? []
+        let coverage = CoverageService().summary(forCodes: tracked.map { $0.zctaCode })
+        let renderer = ImageRenderer(content: ShareCardView(coverage: coverage, dateText: "June 2026"))
+        renderer.scale = 1
+        if let image = renderer.uiImage,
+           let data = image.pngData(),
+           let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            try? data.write(to: dir.appendingPathComponent("sharecard.png"))
+        }
+    }
+    #endif
 
     private static func apply(_ update: TrackingStateUpdate, to state: TrackingState) {
         if update.clearVisit {
