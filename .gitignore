@@ -6,6 +6,7 @@ xcuserdata/
 *.xcuserstate
 build/
 DerivedData/
+DerivedDataDevice/
 *.xcscmblueprint
 *.xccheckout
 # Auto-generated on open; the project is regenerated from project.yml / the
